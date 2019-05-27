@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">GLM Easy Connect</string>
+    <string name="connected_to">Connected to </string>
+    <string name="no_device_connected">No device connected</string>
+    <string name="meter"> m</string>
+    <string name="degree"> °</string>
+    <string name="action_settings">Settings</string>
+    <string name="select_device">"Select device from the list "</string>
+    <string name="refresh">Refresh</string>
+    <string name="paired_devices">Bluetooth Settings</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="request_location_permission">You need to allow access to your location in order to use the Bluetooth feature of your device.</string>
+    <string name="location_permission_denied">Location access is denied. The application cannot use the Bluetooth feature and will not be able to connect to your Bosch device.</string>
+    <string name="bluetooth_on_denied">Switch on Bluetooth in order to discover and connect Bosch devices.</string>
+    <string name="none" />
+
+</resources>

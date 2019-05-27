@@ -1,0 +1,2 @@
+include ':app', ':bosch-mtprotocol'
+project(':bosch-mtprotocol').projectDir = new File('bosch-mtprotocol')
