@@ -26,6 +26,5 @@ android {
 }
 
 dependencies {
-    //compile 'com.android.support:support-v4:19.1.0'
-    implementation project(path: ':bosch-mtprotocol')
+    implementation files('libs/bosch-mtprotocol.jar')
 }

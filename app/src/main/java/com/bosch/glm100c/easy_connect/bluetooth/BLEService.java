@@ -109,7 +109,7 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
             disconnect();
         }
 
-        if (connection != null && connection.getState() == MtAsyncConnection.STATE_CONNECTING) {
+        if (connection != null && connection.getState() == STATE_CONNECTING) {
             Log.w(TAG, "Trying connection: Ignore");
             return false;
         }

@@ -1,16 +1,5 @@
 package com.bosch.glm100c.easy_connect;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-
-import com.bosch.glm100c.easy_connect.bluetooth.BLEService;
-import com.bosch.glm100c.easy_connect.bluetooth.MTBluetoothDevice;
-import com.bosch.glm100c.easy_connect.exc.BluetoothNotSupportedException;
-import com.bosch.mtprotocol.glm100C.connection.MtAsyncConnection;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -31,11 +20,22 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bosch.glm100c.easy_connect.bluetooth.BLEService;
+import com.bosch.glm100c.easy_connect.bluetooth.MTBluetoothDevice;
+import com.bosch.glm100c.easy_connect.exc.BluetoothNotSupportedException;
+import com.bosch.mtprotocol.glm100C.connection.MtAsyncConnection;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends Activity implements OnItemClickListener{
 
