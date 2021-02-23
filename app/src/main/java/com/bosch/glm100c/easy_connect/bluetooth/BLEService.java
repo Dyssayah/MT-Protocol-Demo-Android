@@ -117,7 +117,7 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
         cancelDiscovery();
         this.currentDevice = mtDevice;
 
-        if (BluetoothUtils.validateGLM120Name(mtDevice)) { // GLM 120 C family device - BLE only
+        if (BluetoothUtils.validateGLM120Name(mtDevice) || BluetoothUtils.validateGLM50_2Name(mtDevice)) { // GLM 120 C family device or GLM 50-2 family device - BLE only
             Log.d(TAG, "Trying BLE connection to " + currentDevice.getDisplayName());
             connection = new BLEConnection(currentDevice, this);
             connection.addObserver(this);
@@ -259,7 +259,8 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
         }
 
         if (foundDevice != null && (BluetoothUtils.validateGLM50Name(foundDevice) || BluetoothUtils.validateGLM100Name(foundDevice)
-                || BluetoothUtils.validatePLRName(foundDevice) || BluetoothUtils.validateGISName(foundDevice) || BluetoothUtils.validateGLM120Name(foundDevice))) {
+                || BluetoothUtils.validatePLRName(foundDevice) || BluetoothUtils.validateGISName(foundDevice)
+                || BluetoothUtils.validateGLM120Name(foundDevice) || BluetoothUtils.validateGLM50_2Name(foundDevice))) {
             boolean isNew = true;
             for (MTBluetoothDevice dev : visibleDevices) {
                 if (dev.getDevice().getAddress().equals(foundDevice.getDevice().getAddress())) {

@@ -19,6 +19,8 @@ public class BluetoothUtils {
     static {
         GLM_120_DEV_TYPES.put("3601K72F00", "Bosch GLM 120 C");
         GLM_120_DEV_TYPES.put("00F27K1063", "Bosch GLM 120 C");
+        GLM_120_DEV_TYPES.put("3601K72F51", "Bosch GLM 120 C JP");
+        GLM_120_DEV_TYPES.put("15F27K1063", "Bosch GLM 120 C JP");
         GLM_120_DEV_TYPES.put("3601K72F10", "Bosch GLM400C");
         GLM_120_DEV_TYPES.put("01F27K1063", "Bosch GLM400C");
         GLM_120_DEV_TYPES.put("3601K72F13", "Bosch GLM400CL");
@@ -29,9 +31,25 @@ public class BluetoothUtils {
         GLM_120_DEV_TYPES.put("05F27K1063", "Bosch GLM 150 C");
         GLM_120_DEV_TYPES.put("3601K72FC0", "Bosch GLM 150 C");
         GLM_120_DEV_TYPES.put("0CF27K1063", "Bosch GLM 150 C");
-        GLM_120_DEV_TYPES.put("0925219062", "Bosch GLM CAM CSAM");
-        GLM_120_DEV_TYPES.put("2609125290", "Bosch GLM CAM CSAM");
-        GLM_120_DEV_TYPES.put("          ", "Bosch GLM CAM BSAM");
+    }
+
+    /**
+     * Static map for GLM 50-2 family devices. Bare tool number is key. Device name is value.
+     */
+    public static final Map<String, String> GLM_50_2_DEV_TYPES = new HashMap<>();
+    static {
+        GLM_50_2_DEV_TYPES.put("3601K72T00", "Bosch GLM50-27 C");
+        GLM_50_2_DEV_TYPES.put("00T27K1063", "Bosch GLM50-27 C");
+        GLM_50_2_DEV_TYPES.put("3601K72U00", "Bosch GLM50-27 CG");
+        GLM_50_2_DEV_TYPES.put("00U27K1063", "Bosch GLM50-27 CG");
+        GLM_50_2_DEV_TYPES.put("3601K72T10", "Bosch Blaze165-27C");
+        GLM_50_2_DEV_TYPES.put("01T27K1063", "Bosch Blaze165-27C");
+        GLM_50_2_DEV_TYPES.put("3601K72U10", "Bosch Blaze165-27CG");
+        GLM_50_2_DEV_TYPES.put("01U27K1063", "Bosch Blaze165-27CG");
+        GLM_50_2_DEV_TYPES.put("3601K72UK0", "Bosch GLM50-27 CG AP");
+        GLM_50_2_DEV_TYPES.put("0KU27K1063", "Bosch GLM50-27 CG AP");
+        GLM_50_2_DEV_TYPES.put("3601K72U50", "Bosch GLM50-27 CG JP");
+        GLM_50_2_DEV_TYPES.put("05U27K1063", "Bosch GLM50-27 CG JP");
     }
 
     /**
@@ -57,7 +75,8 @@ public class BluetoothUtils {
         return device!=null && device.getDisplayName() != null
                 && device.getDisplayName().toLowerCase(Locale.getDefault()).contains("bosch")
                 && device.getDisplayName().toLowerCase(Locale.getDefault()).contains("glm5") //updated the name with postfix 5 to validate only for GLM50 devices.
-                && device.getDisplayName().toLowerCase(Locale.getDefault()).contains("50");
+                && device.getDisplayName().toLowerCase(Locale.getDefault()).contains("50")
+                && !device.getDisplayName().toLowerCase(Locale.getDefault()).contains("-2");
     }
 
     /**
@@ -107,13 +126,23 @@ public class BluetoothUtils {
     }
 
     /**
+     * Validates if the paired device is a GLM 120 device
+     *
+     * @param device device to be validated
+     * @return true if validation successful
+     */
+    public static boolean validateGLM50_2Name(MTBluetoothDevice device) {
+        return device!=null && device.getDisplayName() != null && GLM_50_2_DEV_TYPES.containsValue(device.getDisplayName().substring(0, device.getDisplayName().indexOf("x") - 1));
+    }
+
+    /**
      * Validates if the paired device is a EDC based device
      *
      * @param device device to be validated
      * @return true if validation successful
      */
     public static boolean validateEDCDevice(MTBluetoothDevice device) {
-        return validateGLM50Name(device) || validateGLM120Name(device) || validatePLRName(device);
+        return validateGLM50Name(device) || validateGLM120Name(device) || validateGLM50_2Name(device) || validatePLRName(device);
     }
 
     /**

@@ -180,6 +180,9 @@ class MTDeviceParserImpl implements MTDeviceParser {
         if (BluetoothUtils.GLM_120_DEV_TYPES.containsKey(bareTN)) {
             displayName = BluetoothUtils.GLM_120_DEV_TYPES.get(bareTN);
         }
+        if (BluetoothUtils.GLM_50_2_DEV_TYPES.containsKey(bareTN)) {
+            displayName = BluetoothUtils.GLM_50_2_DEV_TYPES.get(bareTN);
+        }
         return displayName;
     }
 
