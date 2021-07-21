@@ -147,7 +147,6 @@ public class BluetoothUtils {
         if (deviceName != null && deviceName.contains("x")) {
             String toolName = deviceName.substring(0, deviceName.indexOf("x") -1);
             return GLM_120_DEV_TYPES.containsValue(toolName)
-                    || GLM_50_2_DEV_TYPES.containsValue(toolName)
                     || GLM_100_DEV_TYPES.containsValue(toolName)
                     || GLM_150_DEV_TYPES.containsValue(toolName);
         }
