@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
 
-    def version_name = "0.0.1"
+    def version_name = "1.0.3"
 
     if (project.hasProperty("versName")) {
         version_name = versName
@@ -20,7 +20,7 @@ android {
         applicationId "com.bosch.glm100c.easy_connect"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 3
+        versionCode 4
         versionName version_name
     }
 
