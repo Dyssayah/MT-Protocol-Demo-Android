@@ -179,9 +179,12 @@ class MTDeviceParserImpl implements MTDeviceParser {
         String displayName = "";
         if (BluetoothUtils.GLM_120_DEV_TYPES.containsKey(bareTN)) {
             displayName = BluetoothUtils.GLM_120_DEV_TYPES.get(bareTN);
-        }
-        if (BluetoothUtils.GLM_50_2_DEV_TYPES.containsKey(bareTN)) {
+        } else if (BluetoothUtils.GLM_50_2_DEV_TYPES.containsKey(bareTN)) {
             displayName = BluetoothUtils.GLM_50_2_DEV_TYPES.get(bareTN);
+        } else if (BluetoothUtils.GLM_150_DEV_TYPES.containsKey(bareTN)) {
+            displayName = BluetoothUtils.GLM_150_DEV_TYPES.get(bareTN);
+        } else if (BluetoothUtils.GLM_100_DEV_TYPES.containsKey(bareTN)) {
+            displayName = BluetoothUtils.GLM_100_DEV_TYPES.get(bareTN);
         }
         return displayName;
     }

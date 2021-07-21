@@ -34,6 +34,34 @@ public class BluetoothUtils {
     }
 
     /**
+     * Static map for GLM 150-27 devices, treated like GLM 120.
+     * Bare tool number is key. Device name is value.
+     */
+    static final Map<String, String> GLM_150_DEV_TYPES = new HashMap<>();
+
+    static {
+        GLM_150_DEV_TYPES.put("3601K72Z00", "Bosch GLM 150-27 C");
+        GLM_150_DEV_TYPES.put("00Z27K1063", "Bosch GLM 150-27 C");
+        GLM_150_DEV_TYPES.put("3601K72Z50", "Bosch GLM 150-27 C");
+        GLM_150_DEV_TYPES.put("05Z27K1063", "Bosch GLM 150-27 C");
+    }
+
+    /**
+     * Static map for GLM 100-25 devices, treated like GLM 120.
+     * Bare tool number is key. Device name is value.
+     */
+    static final Map<String, String> GLM_100_DEV_TYPES = new HashMap<>();
+
+    static {
+        GLM_100_DEV_TYPES.put("3601K72Y00", "Bosch GLM 100-25 C");
+        GLM_100_DEV_TYPES.put("00Y27K1063", "Bosch GLM 100-25 C");
+        GLM_100_DEV_TYPES.put("3601K72Y50", "Bosch GLM 100-25 C");
+        GLM_100_DEV_TYPES.put("05Y27K1063", "Bosch GLM 100-25 C");
+        GLM_100_DEV_TYPES.put("3601K72YK0", "Bosch GLM 100-25 C");
+        GLM_100_DEV_TYPES.put("0KY27K1063", "Bosch GLM 100-25 C");
+    }
+
+    /**
      * Static map for GLM 50-2 family devices. Bare tool number is key. Device name is value.
      */
     public static final Map<String, String> GLM_50_2_DEV_TYPES = new HashMap<>();
@@ -115,14 +143,15 @@ public class BluetoothUtils {
      * @return true if validation successful
      */
     public static boolean validateGLM120Name(MTBluetoothDevice device) {
-        return device!=null && device.getDisplayName() != null && GLM_120_DEV_TYPES.containsValue(device.getDisplayName().substring(0, device.getDisplayName().indexOf("x") - 1));
-        /*return device.getDisplayName() != null
-                && device.getDisplayName().toLowerCase(Locale.getDefault()).contains("bosch")
-                && device.getDisplayName().toLowerCase(Locale.getDefault()).contains("glm")
-                && (device.getDisplayName().toLowerCase(Locale.getDefault()).contains("120")
-                || device.getDisplayName().toLowerCase(Locale.getDefault()).contains("150")
-                || device.getDisplayName().toLowerCase(Locale.getDefault()).contains("400")
-                || device.getDisplayName().toLowerCase(Locale.getDefault()).contains("cam"));*/
+        String deviceName = device != null ? device.getDisplayName() : null;
+        if (deviceName != null && deviceName.contains("x")) {
+            String toolName = deviceName.substring(0, deviceName.indexOf("x") -1);
+            return GLM_120_DEV_TYPES.containsValue(toolName)
+                    || GLM_50_2_DEV_TYPES.containsValue(toolName)
+                    || GLM_100_DEV_TYPES.containsValue(toolName)
+                    || GLM_150_DEV_TYPES.containsValue(toolName);
+        }
+        return false;
     }
 
     /**
