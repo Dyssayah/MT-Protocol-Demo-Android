@@ -1,5 +1,6 @@
 package com.bosch.glm100c.easy_connect;
 
+import java.io.Serializable;
 import java.util.List;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -13,7 +14,7 @@ import android.widget.TextView;
 import com.bosch.glm100c.easy_connect.bluetooth.BLEService;
 import com.bosch.glm100c.easy_connect.bluetooth.MTBluetoothDevice;
 
-public class GLMDeviceArrayAdapter extends ArrayAdapter<MTBluetoothDevice> {
+public class GLMDeviceArrayAdapter extends ArrayAdapter<MTBluetoothDevice> implements Serializable {
 	
 	private MainActivity main;
 	

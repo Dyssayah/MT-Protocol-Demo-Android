@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -18,7 +19,12 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bosch.glm100c.easy_connect.bluetooth.BLEService;
+import com.bosch.glm100c.easy_connect.exc.BluetoothNotSupportedException;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -32,6 +38,10 @@ public class FloatingWindow extends Service {
     private WindowManager.LayoutParams floatWindowLayoutParam;
     private WindowManager windowManager;
 
+    public TextView measTextView;
+    public TextView devTextView;
+
+    public Context mContext;
 
     // As FloatingWindowGFG inherits Service class,
     // it actually overrides the onBind method
@@ -44,6 +54,8 @@ public class FloatingWindow extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+
 
         // The screen height and width are calculated, cause
         // the height and width of the floating window is set depending on this
@@ -62,6 +74,11 @@ public class FloatingWindow extends Service {
         // inflate a new view hierarchy from the floating_layout xml
         floatView = (ViewGroup) inflater.inflate(R.layout.floating_layout, null);
 
+        ListView deviceListView = floatView.findViewById(R.id.device_list_view);
+        deviceListView.setAdapter(MainActivity.getDeviceArrayAdapter());
+        deviceListView.setOnItemClickListener(MainActivity.getInstance());
+        measTextView = floatView.findViewById(R.id.measurement_text_view);
+        devTextView = floatView.findViewById(R.id.device_text_view);
 /*        // The Buttons and the EditText are connected with
         // the corresponding component id used in floating_layout xml file
         maximizeBtn = floatView.findViewById(R.id.buttonMaximize);

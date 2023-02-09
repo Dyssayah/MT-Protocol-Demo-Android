@@ -46,7 +46,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 
 	public static final int REQUEST_CODE_ASK_PERMISSIONS_LOCATION = 41;
 
-	private GLMDeviceArrayAdapter deviceArrayAdapter;
+	public static GLMDeviceArrayAdapter deviceArrayAdapter;
 	private List<MTBluetoothDevice> devices = new ArrayList<>();
 	private BLEService btService;
 	private GLMDeviceController deviceController;
@@ -54,6 +54,8 @@ public class MainActivity extends Activity implements OnItemClickListener{
 	private TextView devTextView;
 
 	private AlertDialog dialog;
+
+	public static MainActivity instance;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -68,23 +70,30 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		setContentView(R.layout.activity_main);
 
 		deviceArrayAdapter = new GLMDeviceArrayAdapter(this, R.layout.item_device, 0, devices);
-		ListView deviceListView = findViewById(R.id.device_list_view);
-		deviceListView.setAdapter(deviceArrayAdapter);
-		deviceListView.setOnItemClickListener(this);
-		measTextView = findViewById(R.id.measurement_text_view);
-		devTextView = findViewById(R.id.device_text_view);
+
+		instance = this;
 
 		if (checkOverlayDisplayPermission()) {
 			// FloatingWindowGFG service is started
-			startService(new Intent(MainActivity.this, FloatingWindow.class));
+			Intent i = new Intent(MainActivity.this, FloatingWindow.class);
+			startService(i);
 			// The MainActivity closes here
 			finish();
+
 		} else {
 			// If permission is not given,
 			// it shows the AlertDialog box and
 			// redirects to the Settings
 			requestOverlayDisplayPermission();
 		}
+	}
+
+	public static MainActivity getInstance() {
+		return instance;
+	}
+
+	public static GLMDeviceArrayAdapter getDeviceArrayAdapter() {
+		return deviceArrayAdapter;
 	}
 
 	private boolean isMyServiceRunning() {
