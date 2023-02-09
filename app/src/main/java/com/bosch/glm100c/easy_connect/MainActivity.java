@@ -116,7 +116,10 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			floatWindowLayoutParam.y = 0;
 
 			windowManager.addView(floatView, floatWindowLayoutParam);
-			finish();
+
+
+
+
 			// Start and bind BLE service here
 			Intent serviceIntent = new Intent(this, BLEService.class);
 			startService(serviceIntent);
@@ -312,7 +315,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			deviceController = null;
 		}
 	}
-/*
+
 	@Override
 	protected void onPause() {
 
@@ -325,7 +328,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		if(btService != null) {
 			btService.cancelDiscovery();
 		}
-	}*/
+	}
 
 
 	/* (non-Javadoc)
