@@ -7,8 +7,8 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.bosch.glm100c.easy_connect.MainActivity" >
-    
-    <LinearLayout 
+
+    <LinearLayout
         android:id="@+id/textbox_layout"
         android:layout_width="fill_parent"
         android:layout_height="100dp"
@@ -17,29 +17,29 @@
         android:layout_marginRight="10dp"
         android:layout_marginBottom="10dp"
         android:orientation="vertical" >
-        
-        <TextView 
-        android:id="@+id/device_text_view"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:text="@string/no_device_connected"
-        android:textSize="20sp"
-        android:gravity="center"
-        android:layout_marginBottom="10dp" />
-        
-        <TextView 
-        android:id="@+id/measurement_text_view"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:text="@string/meter"
-        android:textSize="20sp"
-        android:gravity="center" />
-        
+
+        <TextView
+            android:id="@+id/device_text_view"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:text="@string/no_device_connected"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:layout_marginBottom="10dp" />
+
+        <TextView
+            android:id="@+id/measurement_text_view"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:text="@string/meter"
+            android:textSize="20sp"
+            android:gravity="center" />
+
     </LinearLayout>
-    
-    <ListView 
+
+    <ListView
         android:id="@+id/device_list_view"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
