@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -13,9 +14,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -49,6 +52,8 @@ public class MainActivity extends Activity implements OnItemClickListener{
 	private GLMDeviceController deviceController;
 	private TextView measTextView;
 	private TextView devTextView;
+
+	private AlertDialog dialog;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +73,94 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		deviceListView.setOnItemClickListener(this);
 		measTextView = findViewById(R.id.measurement_text_view);
 		devTextView = findViewById(R.id.device_text_view);
+
+		if (checkOverlayDisplayPermission()) {
+			// FloatingWindowGFG service is started
+			startService(new Intent(MainActivity.this, FloatingWindow.class));
+			// The MainActivity closes here
+			finish();
+		} else {
+			// If permission is not given,
+			// it shows the AlertDialog box and
+			// redirects to the Settings
+			requestOverlayDisplayPermission();
+		}
 	}
-	
+
+	private boolean isMyServiceRunning() {
+		// The ACTIVITY_SERVICE is needed to retrieve a
+		// ActivityManager for interacting with the global system
+		// It has a constant String value "activity".
+		ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+
+		// A loop is needed to get Service information that are currently running in the System.
+		// So ActivityManager.RunningServiceInfo is used. It helps to retrieve a
+		// particular service information, here its this service.
+		// getRunningServices() method returns a list of the services that are currently running
+		// and MAX_VALUE is 2147483647. So at most this many services can be returned by this method.
+		for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+
+			// If this service is found as a running, it will return true or else false.
+			if (FloatingWindow.class.getName().equals(service.service.getClassName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void requestOverlayDisplayPermission() {
+		// An AlertDialog is created
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+		// This dialog can be closed, just by 
+		// taping outside the dialog-box
+		builder.setCancelable(true);
+
+		// The title of the Dialog-box is set
+		builder.setTitle("Screen Overlay Permission Needed");
+
+		// The message of the Dialog-box is set
+		builder.setMessage("Enable 'Display over other apps' from System Settings.");
+
+		// The event of the Positive-Button is set
+		builder.setPositiveButton("Open Settings", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// The app will redirect to the 'Display over other apps' in Settings.
+				// This is an Implicit Intent. This is needed when any Action is needed 
+				// to perform, here it is
+				// redirecting to an other app(Settings).
+				Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+
+				// This method will start the intent. It takes two parameter, 
+				// one is the Intent and the other is
+				// an requestCode Integer. Here it is -1.
+				startActivityForResult(intent, RESULT_OK);
+			}
+		});
+		dialog = builder.create();
+		// The Dialog will show in the screen
+		dialog.show();
+	}
+
+
+	private boolean checkOverlayDisplayPermission() {
+		// Android Version is lesser than Marshmallow
+		// or the API is lesser than 23
+		// doesn't need 'Display over other apps' permission enabling.
+		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+			// If 'Display over other apps' is not enabled it
+			// will return false or else true
+			if (!Settings.canDrawOverlays(this)) {
+				return false;
+			} else {
+				return true;
+			}
+		} else {
+			return true;
+		}
+	}
+
 	@Override
 	public void onItemClick(AdapterView<?> adapter, View v, int position, long id) {
 
