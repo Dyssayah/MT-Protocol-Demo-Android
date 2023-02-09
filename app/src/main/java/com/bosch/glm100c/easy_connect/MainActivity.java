@@ -13,13 +13,22 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.PixelFormat;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -43,33 +52,191 @@ public class MainActivity extends Activity implements OnItemClickListener{
 
 	public static final int REQUEST_CODE_ASK_PERMISSIONS_LOCATION = 41;
 
+	private int LAYOUT_TYPE;
+
+	private WindowManager.LayoutParams floatWindowLayoutParam;
+
+	private WindowManager windowManager;
 	private GLMDeviceArrayAdapter deviceArrayAdapter;
 	private List<MTBluetoothDevice> devices = new ArrayList<>();
 	private BLEService btService;
 	private GLMDeviceController deviceController;
 	private TextView measTextView;
 	private TextView devTextView;
+
+	private ViewGroup floatView;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		// Start and bind BLE service here
-		Intent serviceIntent = new Intent(this, BLEService.class);
-		startService(serviceIntent);
-		Intent mIntent = new Intent(this, BLEService.class);
-		bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-		
+
+
 		setContentView(R.layout.activity_main);
 
-		deviceArrayAdapter = new GLMDeviceArrayAdapter(this, R.layout.item_device, 0, devices);
-		ListView deviceListView = findViewById(R.id.device_list_view);
-		deviceListView.setAdapter(deviceArrayAdapter);
-		deviceListView.setOnItemClickListener(this);
-		measTextView = findViewById(R.id.measurement_text_view);
-		devTextView = findViewById(R.id.device_text_view);
+		if (checkOverlayDisplayPermission()) {
+
+
+			DisplayMetrics displayMetrics = new DisplayMetrics();
+			getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+			int height = displayMetrics.heightPixels;
+			int width = displayMetrics.widthPixels;
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				// If API Level is more than 26, we need TYPE_APPLICATION_OVERLAY
+				LAYOUT_TYPE = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+			} else {
+				// If API Level is lesser than 26, then we can
+				// use TYPE_SYSTEM_ERROR,
+				// TYPE_SYSTEM_OVERLAY, TYPE_PHONE, TYPE_PRIORITY_PHONE.
+				// But these are all
+				// deprecated in API 26 and later. Here TYPE_TOAST works best.
+				LAYOUT_TYPE = WindowManager.LayoutParams.TYPE_TOAST;
+			}
+
+			windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+			LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+
+			// inflate a new view hierarchy from the floating_layout xml
+			floatView = (ViewGroup) inflater.inflate(R.layout.activity_main, null);
+			
+			// FloatingWindowGFG service is started
+			floatWindowLayoutParam = new WindowManager.LayoutParams(
+					(int) (width * (0.55f)),
+					(int) (height * (0.58f)),
+					LAYOUT_TYPE,
+					WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+					PixelFormat.TRANSLUCENT
+			);
+
+			floatWindowLayoutParam.gravity = Gravity.CENTER;
+
+			// X and Y value of the window is set
+			floatWindowLayoutParam.x = 0;
+			floatWindowLayoutParam.y = 0;
+
+			windowManager.addView(floatView, floatWindowLayoutParam);
+			finish();
+			// Start and bind BLE service here
+			Intent serviceIntent = new Intent(this, BLEService.class);
+			startService(serviceIntent);
+			Intent mIntent = new Intent(this, BLEService.class);
+			bindService(mIntent, mConnection, BIND_AUTO_CREATE);
+
+			deviceArrayAdapter = new GLMDeviceArrayAdapter(this, R.layout.item_device, 0, devices);
+			ListView deviceListView = floatView.findViewById(R.id.device_list_view);
+			deviceListView.setAdapter(deviceArrayAdapter);
+			deviceListView.setOnItemClickListener(this);
+			measTextView = floatView.findViewById(R.id.measurement_text_view);
+			devTextView = floatView.findViewById(R.id.device_text_view);
+
+
+
+			floatView.setOnTouchListener(new View.OnTouchListener() {
+				final WindowManager.LayoutParams floatWindowLayoutUpdateParam = floatWindowLayoutParam;
+				double x;
+				double y;
+				double px;
+				double py;
+
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+
+					switch (event.getAction()) {
+						// When the window will be touched,
+						// the x and y position of that position
+						// will be retrieved
+						case MotionEvent.ACTION_DOWN:
+							x = floatWindowLayoutUpdateParam.x;
+							y = floatWindowLayoutUpdateParam.y;
+
+							// returns the original raw X
+							// coordinate of this event
+							px = event.getRawX();
+
+							// returns the original raw Y
+							// coordinate of this event
+							py = event.getRawY();
+							break;
+						// When the window will be dragged around,
+						// it will update the x, y of the Window Layout Parameter
+						case MotionEvent.ACTION_MOVE:
+							floatWindowLayoutUpdateParam.x = (int) ((x + event.getRawX()) - px);
+							floatWindowLayoutUpdateParam.y = (int) ((y + event.getRawY()) - py);
+
+							// updated parameter is applied to the WindowManager
+							windowManager.updateViewLayout(floatView, floatWindowLayoutUpdateParam);
+							break;
+					}
+					return false;
+				}
+			});
+
+		} else {
+			// If permission is not given,
+			// it shows the AlertDialog box and
+			// redirects to the Settings
+			requestOverlayDisplayPermission();
+		}
+
+
 	}
-	
+
+
+
+	private void requestOverlayDisplayPermission() {
+		// An AlertDialog is created
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+		// This dialog can be closed, just by taping
+		// anywhere outside the dialog-box
+		builder.setCancelable(true);
+
+		// The title of the Dialog-box is set
+		builder.setTitle("Screen Overlay Permission Needed");
+
+		// The message of the Dialog-box is set
+		builder.setMessage("Enable 'Display over other apps' from System Settings.");
+
+		// The event of the Positive-Button is set
+		builder.setPositiveButton("Open Settings", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// The app will redirect to the 'Display over other apps' in Settings.
+				// This is an Implicit Intent. This is needed when any Action is needed
+				// to perform, here it is
+				// redirecting to an other app(Settings).
+				Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+
+				// This method will start the intent. It takes two parameter, one is the Intent and the other is
+				// an requestCode Integer. Here it is -1.
+				startActivityForResult(intent, RESULT_OK);
+			}
+		});
+		AlertDialog dialog = builder.create();
+		// The Dialog will
+		// show in the screen
+		dialog.show();
+	}
+
+	private boolean checkOverlayDisplayPermission() {
+		// Android Version is lesser than Marshmallow or
+		// the API is lesser than 23
+		// doesn't need 'Display over other apps' permission enabling.
+		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+			// If 'Display over other apps' is not enabled
+			// it will return false or else true
+			if (!Settings.canDrawOverlays(this)) {
+				return false;
+			} else {
+				return true;
+			}
+		} else {
+			return true;
+		}
+	}
+
+
 	@Override
 	public void onItemClick(AdapterView<?> adapter, View v, int position, long id) {
 
@@ -145,7 +312,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			deviceController = null;
 		}
 	}
-
+/*
 	@Override
 	protected void onPause() {
 
@@ -158,7 +325,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		if(btService != null) {
 			btService.cancelDiscovery();
 		}
-	}
+	}*/
 
 
 	/* (non-Javadoc)
