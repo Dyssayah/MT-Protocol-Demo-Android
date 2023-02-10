@@ -3,6 +3,10 @@ apply plugin: 'com.android.application'
 android {
 
     def version_name = "1.0.3"
+    def core_version = "1.6.0"
+    dependencies {
+        implementation "androidx.core:core:$core_version"
+    }
 
     if (project.hasProperty("versName")) {
         version_name = versName
@@ -18,8 +22,8 @@ android {
 
     defaultConfig {
         applicationId "com.bosch.glm100c.easy_connect"
-        minSdkVersion 19
-        targetSdkVersion 28
+        minSdkVersion 26
+        targetSdkVersion 33
         versionCode 4
         versionName version_name
     }
