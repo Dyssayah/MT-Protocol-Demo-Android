@@ -15,7 +15,7 @@ import androidx.core.app.NotificationManagerCompat;
 import com.bosch.glm100c.easy_connect.bluetooth.BLEService;
 
 public class MyForegroundService extends Service {
-
+    BLEService btService;
     private static final String CHANNEL_ID = "Couves";
 
     @Override
@@ -25,6 +25,8 @@ public class MyForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        btService = (BLEService) intent.getParcelableExtra("bleService");
         // Your code here
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
@@ -42,8 +44,7 @@ public class MyForegroundService extends Service {
 
 // Use a unique id for each notification you want to display
         int notificationId = 1;
-        notificationManager.notify(notificationId, builder.build());
-
+        startForeground(notificationId , builder.build());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.channel_name);
             String description = getString(R.string.channel_description);
@@ -56,17 +57,6 @@ public class MyForegroundService extends Service {
         }
 
 
-        Intent serviceIntent = new Intent(this, BLEService.class);
-        startService(serviceIntent);
-        Intent mIntent = new Intent(this, BLEService.class);
-        bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-
-        deviceArrayAdapter = new GLMDeviceArrayAdapter(this, R.layout.item_device, 0, devices);
-        ListView deviceListView = findViewById(R.id.device_list_view);
-        deviceListView.setAdapter(deviceArrayAdapter);
-        deviceListView.setOnItemClickListener(this);
-        measTextView = findViewById(R.id.measurement_text_view);
-        devTextView = findViewById(R.id.device_text_view);
 
         // Use the START_STICKY constant to ensure that the service restarts if it's
         // terminated by the system

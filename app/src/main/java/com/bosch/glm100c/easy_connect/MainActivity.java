@@ -18,6 +18,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -68,9 +69,46 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		setContentView(R.layout.activity_main);
 
 
-		Intent intent = new Intent(this, MyForegroundService.class);
-		startForegroundService(intent);
 
+		Intent serviceIntent = new Intent(this, BLEService.class);
+		startService(serviceIntent);
+		Intent mIntent = new Intent(this, BLEService.class);
+		bindService(mIntent, mConnection, BIND_AUTO_CREATE);
+
+		deviceArrayAdapter = new GLMDeviceArrayAdapter(this, R.layout.item_device, 0, devices);
+		ListView deviceListView = findViewById(R.id.device_list_view);
+		deviceListView.setAdapter(deviceArrayAdapter);
+		deviceListView.setOnItemClickListener(this);
+		measTextView = findViewById(R.id.measurement_text_view);
+		devTextView = findViewById(R.id.device_text_view);
+	}
+
+	private boolean mBound = false;
+
+
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		Intent intent = new Intent(this, BLEService.class);
+		bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		if (mBound) {
+			unbindService(mConnection);
+			mBound = false;
+		}
+	}
+
+	public void startForegroundService() {
+		if (mBound) {
+			Intent intent = new Intent(this, MyForegroundService.class);
+			intent.putExtra("bleService", (Parcelable) btService);
+			startForegroundService(intent);
+		}
 	}
 
 
@@ -100,7 +138,8 @@ public class MainActivity extends Activity implements OnItemClickListener{
 
 			// If not connected or selected device is not the connected device -> start connection
 			btService.connect(device);
-			
+
+			startForegroundService();
 		} catch (BluetoothNotSupportedException e) {
 			Log.e(TAG,"BluetoothNotSupportedException",e);
 		}
@@ -113,17 +152,19 @@ public class MainActivity extends Activity implements OnItemClickListener{
 	private ServiceConnection mConnection = new ServiceConnection() {
 
 		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			btService = null;
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			BLEService.BLELocalBinder binder = (BLEService.BLELocalBinder) service;
+			btService = binder.getService();
+			mBound = true;
 		}
 
 		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			BLEService.BLELocalBinder mLocalBinder = (BLEService.BLELocalBinder) service;
-			btService = mLocalBinder.getService();
+		public void onServiceDisconnected(ComponentName name) {
+//			btService = null;
+			mBound = false;
 		}
 	};
-	
+
 	/**
 	 * Initializes the GLMDeviceController class, that will handle messages from and to GLM device
 	 */

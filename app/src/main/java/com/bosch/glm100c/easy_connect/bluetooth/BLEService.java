@@ -11,6 +11,8 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.bosch.glm100c.easy_connect.bluetooth.ble_utils.BleDeviceScanner18;
@@ -26,7 +28,41 @@ import java.util.Set;
 
 import static com.bosch.mtprotocol.glm100C.connection.MtAsyncConnection.STATE_CONNECTING;
 
-public class BLEService extends Service implements MtAsyncConnection.MTAsyncConnectionObserver, IBleDeviceScanner.OnDeviceDiscoveredHandler {
+public class BLEService extends Service implements MtAsyncConnection.MTAsyncConnectionObserver, IBleDeviceScanner.OnDeviceDiscoveredHandler, Parcelable {
+
+    private int serviceId;
+
+    // Other member variables and methods
+    public BLEService() {
+        // Default constructor
+    }
+    protected BLEService(Parcel in) {
+        serviceId = in.readInt();
+        // Read other member variables from the parcel
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(serviceId);
+        // Write other member variables to the parcel
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<BLEService> CREATOR = new Creator<BLEService>() {
+        @Override
+        public BLEService createFromParcel(Parcel in) {
+            return new BLEService(in);
+        }
+
+        @Override
+        public BLEService[] newArray(int size) {
+            return new BLEService[size];
+        }
+    };
 
     public static final String ACTION_DEVICE_LIST_UPDATED = "DEVICE_LIST_UPDATED";
     public static final String ACTION_CONNECTION_STATUS_UPDATE = "CONNECTION_STATUS_UPDATE";
