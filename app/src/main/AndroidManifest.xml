@@ -22,7 +22,9 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".bluetooth.BLEService" />
+        <service android:name=".bluetooth.BLEService"
+            android:enabled="true"
+            android:exported="true"/>
 
     </application>
 
