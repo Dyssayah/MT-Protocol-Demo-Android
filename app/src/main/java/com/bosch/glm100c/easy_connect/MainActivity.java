@@ -68,18 +68,8 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		setContentView(R.layout.activity_main);
 
 
-		Intent serviceIntent = new Intent(this, BLEService.class);
-		startService(serviceIntent);
-		Intent mIntent = new Intent(this, BLEService.class);
-		bindService(mIntent, mConnection, BIND_AUTO_CREATE);
-
-		deviceArrayAdapter = new GLMDeviceArrayAdapter(this, R.layout.item_device, 0, devices);
-		ListView deviceListView = findViewById(R.id.device_list_view);
-		deviceListView.setAdapter(deviceArrayAdapter);
-		deviceListView.setOnItemClickListener(this);
-		measTextView = findViewById(R.id.measurement_text_view);
-		devTextView = findViewById(R.id.device_text_view);
-
+		Intent intent = new Intent(this, MyForegroundService.class);
+		startForegroundService(intent);
 
 	}
 
@@ -106,6 +96,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 				Log.d(TAG, "App already connected to " + device.getDisplayName() + " so only disconnect");
 				return;
 			}
+
 
 			// If not connected or selected device is not the connected device -> start connection
 			btService.connect(device);

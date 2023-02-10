@@ -16,5 +16,7 @@
     <string name="location_permission_denied">Location access is denied. The application cannot use the Bluetooth feature and will not be able to connect to your Bosch device.</string>
     <string name="bluetooth_on_denied">Switch on Bluetooth in order to discover and connect Bosch devices.</string>
     <string name="none" />
+    <string name="channel_name">CHANNEL_ID</string>
+    <string name="channel_description">CHANNEL_ID</string>
 
 </resources>
