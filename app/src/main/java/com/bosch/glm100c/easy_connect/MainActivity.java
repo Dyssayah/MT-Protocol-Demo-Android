@@ -13,23 +13,20 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.graphics.PixelFormat;
+
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
-import android.provider.Settings;
-import android.util.DisplayMetrics;
+
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
+
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
+
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
+
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -41,6 +38,12 @@ import com.bosch.glm100c.easy_connect.bluetooth.MTBluetoothDevice;
 import com.bosch.glm100c.easy_connect.exc.BluetoothNotSupportedException;
 import com.bosch.mtprotocol.glm100C.connection.MtAsyncConnection;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -59,16 +62,21 @@ public class MainActivity extends Activity implements OnItemClickListener{
 	private GLMDeviceController deviceController;
 	private TextView measTextView;
 	private TextView devTextView;
+	private String urlcimp;
+	private Toast tosta;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-
+		Intent intent = getIntent();
+		Uri data = intent.getData();
+		if (data != null) {
+			urlcimp = data.getQueryParameter("urlcimp");
+			Log.d("MainActivity", "URLCIMP: " + urlcimp);
+		}
 
 		setContentView(R.layout.activity_main);
-
-
 
 		Intent serviceIntent = new Intent(this, BLEService.class);
 		startService(serviceIntent);
@@ -82,9 +90,60 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		measTextView = findViewById(R.id.measurement_text_view);
 		devTextView = findViewById(R.id.device_text_view);
 	}
+/*
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+
+		setIntent(intent);
+		Uri data = intent.getData();
+		if (data != null) {
+			finish();
+			urlcimp = data.getQueryParameter("urlcimp");
+			Log.d("MainActivity", "URLCIMP: " + urlcimp);
+		}
+	}*/
+
+	public void sendData(final String urlString, final String data) {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Log.d("MainActivity", "STRING DO URL: " + urlcimp);
+					URL url = new URL(urlString);
+					HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+					conn.setRequestMethod("POST");
+					conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+					conn.setDoOutput(true);
+
+					DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+					wr.writeBytes(data);
+					wr.flush();
+					wr.close();
+
+					int responseCode = conn.getResponseCode();
+					BufferedReader br = null;
+					if (100 <= responseCode && responseCode <= 399) {
+						br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+						Log.d("DataSender", br.toString());
+					} else {
+						br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+						Log.d("DataSender", br.toString());
+					}
+				} catch (Exception e) {
+					Log.e("DataSender", "Error sending data", e);
+				}
+			}
+		}).start();
+	}
 
 	private boolean mBound = false;
 
+
+/*	@Override
+	public void onBackPressed() {
+		moveTaskToBack(false);
+	}*/
 
 
 	@Override
@@ -108,8 +167,10 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			Intent intent = new Intent(this, MyForegroundService.class);
 			intent.putExtra("bleService", (Parcelable) btService);
 			startForegroundService(intent);
+
 		}
 	}
+
 
 
 	@Override
@@ -123,6 +184,11 @@ public class MainActivity extends Activity implements OnItemClickListener{
 
 		try {
 			MTBluetoothDevice device = deviceArrayAdapter.getItem(position);
+
+			tosta = Toast.makeText(this, "A connectar ao dispositivo", Toast.LENGTH_SHORT);
+
+			tosta.show();
+
 			assert device != null;
 			Log.d(TAG, "Selected device " + device.getDisplayName() + "; MAC = " + device.getDevice().getAddress());
 
@@ -140,6 +206,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			btService.connect(device);
 
 			startForegroundService();
+
 		} catch (BluetoothNotSupportedException e) {
 			Log.e(TAG,"BluetoothNotSupportedException",e);
 		}
@@ -198,13 +265,13 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		super.onPause();
 
 		unregisterReceiver(mReceiver);
-		
+
 		// stop Bluetooth scan
 		Log.w(TAG, "Device activity on pause: cancel discovery");
 		if(btService != null) {
 			btService.cancelDiscovery();
 		}
-	}*/
+	}
 
 
 	/* (non-Javadoc)
@@ -311,7 +378,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		public void onReceive(Context context, Intent intent) {
 
 			if(intent != null && BLEService.ACTION_CONNECTION_STATUS_UPDATE.equals(intent.getAction())) {
-				
+
 				// Device was connected or disconnected - handle device list accordingly
 				refreshDeviceList();
 				if(deviceArrayAdapter != null){
@@ -323,24 +390,27 @@ public class MainActivity extends Activity implements OnItemClickListener{
 					setupDeviceController();
 					String deviceName = intent.getStringExtra(BLEService.EXTRA_DEVICE);
 					devTextView.setText(getResources().getString(R.string.connected_to) + deviceName);
+					tosta.cancel();
+					onBackPressed();
 				} else {
 					destroyDeviceController();
 					devTextView.setText(getResources().getString(R.string.no_device_connected));
 				}
-				
+
 			} else if(intent != null && BLEService.ACTION_DEVICE_LIST_UPDATED.equals(intent.getAction())) {
-				
+
 				// Device list updated
 				refreshDeviceList();
-				
+
 			} else if(intent != null && GLMDeviceController.ACTION_SYNC_CONTAINER_RECEIVED.equals(intent.getAction())) {
-				
+
 				// Measurement received
 				if(!Objects.requireNonNull(intent.getExtras()).isEmpty()) {
 					float measurement = intent.getFloatExtra(GLMDeviceController.EXTRA_MEASUREMENT, 0);
 					measTextView.setText(Float.toString(measurement) + getResources().getString(R.string.meter));
+					sendData(urlcimp, Float.toString(measurement));
 				}
-				
+
 			} else if(intent != null && GLMDeviceController.ACTION_THERMAL_CONTAINER_RECEIVED.equals(intent.getAction())) {
 
                 // Measurement received
@@ -350,10 +420,10 @@ public class MainActivity extends Activity implements OnItemClickListener{
                 }
 
             } else {
-				
+
 				// Received intent is null or not known -> ignore
 				Log.w(TAG, "Unknown intent or intent is null: ignore");
-				
+
 			}
 		}
 	};
@@ -383,7 +453,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			return super.onOptionsItemSelected(item);
 		}
 	}
-	
+
 	/**
 	 * Used to refresh the device list shown. If Bluetooth scanning is not enabled, the list will be empty
 	 */

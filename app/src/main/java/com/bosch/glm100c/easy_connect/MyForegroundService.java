@@ -34,8 +34,8 @@ public class MyForegroundService extends Service {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_check_normal)
-                .setContentTitle("My Foreground Service")
-                .setContentText("Running in the foreground")
+                .setContentTitle("Serviço de medições")
+                .setContentText("Ligado ao dispositivo")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent);
 
@@ -55,8 +55,6 @@ public class MyForegroundService extends Service {
             // or other notification behaviors after this
             notificationManager.createNotificationChannel(channel);
         }
-
-
 
         // Use the START_STICKY constant to ensure that the service restarts if it's
         // terminated by the system

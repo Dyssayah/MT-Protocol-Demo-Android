@@ -227,6 +227,7 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
         Intent intent = new Intent(ACTION_CONNECTION_STATUS_UPDATE);
         intent.putExtra(EXTRA_CONNECTION_STATUS, connection.getState());
         intent.putExtra(EXTRA_DEVICE, currentDevice.getDisplayName());
+
         sendBroadcast(intent);
 
 
