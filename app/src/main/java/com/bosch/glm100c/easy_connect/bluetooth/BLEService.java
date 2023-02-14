@@ -199,6 +199,12 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        if (intent != null && intent.getAction() != null) {
+            if (intent.getAction().equals("STOP_SERVICE")) {
+                stopSelf();
+            }
+        }
+
         mHandler = new Handler();
         try {
             startDiscovery();
