@@ -5,8 +5,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -29,7 +29,7 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="http"
                     android:host="cimede.cimp.pt"
-                    android:pathPrefix="/connect/"/>
+                    android:pathPrefix="/connect"/>
             </intent-filter>
             <!-- Accept adb data flag -->
             <intent-filter>
@@ -37,7 +37,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http"
-                    android:host="cimede.cimp.pt/connect/"/>
+                    android:host="cimede.cimp.pt/connect"/>
             </intent-filter>
         </activity>
 

@@ -39,15 +39,22 @@ import com.bosch.glm100c.easy_connect.exc.BluetoothNotSupportedException;
 import com.bosch.mtprotocol.glm100C.connection.MtAsyncConnection;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class MainActivity extends Activity implements OnItemClickListener{
@@ -62,19 +69,21 @@ public class MainActivity extends Activity implements OnItemClickListener{
 	private GLMDeviceController deviceController;
 	private TextView measTextView;
 	private TextView devTextView;
-	private String urlcimp;
+	private String urlcallback;
 	private Toast tosta;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+/*
 		Intent intent = getIntent();
 		Uri data = intent.getData();
 		if (data != null) {
-			urlcimp = data.getQueryParameter("urlcimp");
-			Log.d("MainActivity", "URLCIMP: " + urlcimp);
+			urlcallback = data.getQueryParameter("callback");
+			Log.d("MainActivity", "URLCALLBACK: " + urlcallback);
 		}
+*/
 
 		setContentView(R.layout.activity_main);
 
@@ -90,7 +99,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		measTextView = findViewById(R.id.measurement_text_view);
 		devTextView = findViewById(R.id.device_text_view);
 	}
-/*
+
 	@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
@@ -98,28 +107,30 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		setIntent(intent);
 		Uri data = intent.getData();
 		if (data != null) {
-			finish();
-			urlcimp = data.getQueryParameter("urlcimp");
-			Log.d("MainActivity", "URLCIMP: " + urlcimp);
+			urlcallback = data.getQueryParameter("callback");
+			Log.d("MainActivity", "URLCALLBACK: " + urlcallback);
 		}
-	}*/
+	}
 
 	public void sendData(final String urlString, final String data) {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					Log.d("MainActivity", "STRING DO URL: " + urlcimp);
+					Log.d("MainActivity", "STRING DO URL: " + urlString);
 					URL url = new URL(urlString);
 					HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 					conn.setRequestMethod("POST");
 					conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 					conn.setDoOutput(true);
 
-					DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-					wr.writeBytes(data);
-					wr.flush();
-					wr.close();
+					BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream(), "UTF-8"));
+					HashMap<String, String> postDataParams = new HashMap<>();
+					postDataParams.put("valor", data);
+
+					writer.write(getPostDataString(postDataParams));
+					writer.flush();
+					writer.close();
 
 					int responseCode = conn.getResponseCode();
 					BufferedReader br = null;
@@ -137,13 +148,28 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		}).start();
 	}
 
+	public String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
+		StringBuilder result = new StringBuilder();
+		boolean first = true;
+		for (Map.Entry<String, String> entry : params.entrySet()) {
+			if (first)
+				first = false;
+			else
+				result.append("&");
+			result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+			result.append("=");
+			result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+		}
+		return result.toString();
+	}
+
 	private boolean mBound = false;
 
 
-/*	@Override
+	@Override
 	public void onBackPressed() {
 		moveTaskToBack(false);
-	}*/
+	}
 
 
 	@Override
@@ -408,7 +434,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 				if(!Objects.requireNonNull(intent.getExtras()).isEmpty()) {
 					float measurement = intent.getFloatExtra(GLMDeviceController.EXTRA_MEASUREMENT, 0);
 					measTextView.setText(Float.toString(measurement) + getResources().getString(R.string.meter));
-					sendData(urlcimp, Float.toString(measurement));
+					sendData(urlcallback, Float.toString(measurement));
 				}
 
 			} else if(intent != null && GLMDeviceController.ACTION_THERMAL_CONTAINER_RECEIVED.equals(intent.getAction())) {
