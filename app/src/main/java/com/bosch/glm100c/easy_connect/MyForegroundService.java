@@ -16,7 +16,7 @@ import com.bosch.glm100c.easy_connect.bluetooth.BLEService;
 
 public class MyForegroundService extends Service {
     BLEService btService;
-    private static final String CHANNEL_ID = "Couves";
+    private static final String CHANNEL_ID = "Cimede";
 
     @Override
     public void onCreate() {
@@ -27,16 +27,22 @@ public class MyForegroundService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         btService = (BLEService) intent.getParcelableExtra("bleService");
+
         // Your code here
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
                 notificationIntent, 0);
 
+        Intent finishTaskIntent = new Intent(this, FinishTaskActivity.class);
+        finishTaskIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent finishIntent = PendingIntent.getActivity(this, 1, finishTaskIntent, PendingIntent.FLAG_ONE_SHOT);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_check_normal)
+                .setSmallIcon(R.drawable.logo_transparent)
                 .setContentTitle("Serviço de medições")
                 .setContentText("Ligado ao dispositivo")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .addAction(0, "Desligar", finishIntent)
                 .setContentIntent(pendingIntent);
 
 
