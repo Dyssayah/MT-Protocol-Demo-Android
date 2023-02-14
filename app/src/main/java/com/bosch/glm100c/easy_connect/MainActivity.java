@@ -5,6 +5,8 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,6 +14,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
 import android.net.Uri;
@@ -79,15 +82,6 @@ public class MainActivity extends Activity implements OnItemClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-/*
-		Intent intent = getIntent();
-		Uri data = intent.getData();
-		if (data != null) {
-			urlcallback = data.getQueryParameter("callback");
-			Log.d("MainActivity", "URLCALLBACK: " + urlcallback);
-		}
-*/
-
         setContentView(R.layout.activity_main);
 
         Intent serviceIntent = new Intent(this, BLEService.class);
@@ -101,6 +95,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
         deviceListView.setOnItemClickListener(this);
         measTextView = findViewById(R.id.measurement_text_view);
         devTextView = findViewById(R.id.device_text_view);
+
     }
 
     @Override
@@ -207,20 +202,33 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
     @Override
     public void onItemClick(AdapterView<?> adapter, View v, int position, long id) {
+        tosta = Toast.makeText(this, "A connectar ao dispositivo", Toast.LENGTH_SHORT);
 
+        tosta.show();
         // If app is connecting - do nothing
         if (btService.getConnectionState() == MtAsyncConnection.STATE_CONNECTING) {
             Log.w(TAG, "App is connecting, no connection started");
             return;
         }
 
+        MTBluetoothDevice device = deviceArrayAdapter.getItem(position);
+
+        // To save the MTBluetoothDevice
+        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        String deviceAddress = device.getDevice().getAddress(); // get the device's MAC address
+        String deviceName = device.getDisplayName(); // get the device's name
+
+        editor.putString("myDeviceAddress", deviceAddress); // save the MAC address as a string
+        editor.putString("myDeviceName", deviceName); // save the device name as a string
+        editor.apply();
+
+        connectToDevice(device);
+    }
+
+    private void connectToDevice(MTBluetoothDevice device) {
         try {
-            MTBluetoothDevice device = deviceArrayAdapter.getItem(position);
-
-            tosta = Toast.makeText(this, "A connectar ao dispositivo", Toast.LENGTH_SHORT);
-
-            tosta.show();
-
             assert device != null;
             Log.d(TAG, "Selected device " + device.getDisplayName() + "; MAC = " + device.getDevice().getAddress());
 
@@ -255,11 +263,32 @@ public class MainActivity extends Activity implements OnItemClickListener {
             BLEService.BLELocalBinder binder = (BLEService.BLELocalBinder) service;
             btService = binder.getService();
             mBound = true;
+
+
+            // To read the MTBluetoothDevice
+            SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+            String deviceAddress = sharedPreferences.getString("myDeviceAddress", null);
+            String deviceName = sharedPreferences.getString("myDeviceName", null);
+
+
+            if (deviceAddress != null && deviceName != null) {
+                BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+                BluetoothDevice bluetoothDevice = adapter.getRemoteDevice(deviceAddress);
+                MTBluetoothDevice device = new MTBluetoothDevice(bluetoothDevice, deviceName);
+
+                int bondState = bluetoothDevice.getBondState();
+
+                Log.d("wow", "sim 1");
+                if (bondState == BluetoothDevice.BOND_BONDED) {
+                    Log.d("wow", "sim 2");
+                    connectToDevice(device);
+                }
+            }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-//			btService = null;
+			btService = null;
             mBound = false;
         }
     };
@@ -423,7 +452,6 @@ public class MainActivity extends Activity implements OnItemClickListener {
                     setupDeviceController();
                     String deviceName = intent.getStringExtra(BLEService.EXTRA_DEVICE);
                     devTextView.setText(getResources().getString(R.string.connected_to) + deviceName);
-                    tosta.cancel();
                     onBackPressed();
                 } else {
                     destroyDeviceController();
@@ -434,6 +462,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
                 // Device list updated
                 refreshDeviceList();
+
                 spinner = (ProgressBar)findViewById(R.id.progressBarSearch);
 
                 spinner.setVisibility(View.GONE);

@@ -3,7 +3,7 @@
 
     <string name="app_name">CIMEDE</string>
     <string name="connected_to">"Conectado a "</string>
-    <string name="no_device_connected">À procura de dispositivos Bosch</string>
+    <string name="no_device_connected">À procura de aparelhos Bosch</string>
     <string name="meter"> m</string>
     <string name="degree"> °</string>
     <string name="action_settings">Definições</string>
@@ -12,7 +12,7 @@
     <string name="paired_devices">Definições Bluetooth</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancelar</string>
-    <string name="request_location_permission">É necessário que dê permissão ao seu dispositivo acesso à localização para poder usar a função de Bluetooth do dispositivo.</string>
+    <string name="request_location_permission">É necessário que dê permissão ao seu dispositivo acesso à localização para poder usar a função de Bluetooth do aparelho.</string>
     <string name="location_permission_denied">Acesso à localização está desligado. Esta aplicação não consegue usar os serviços bluetooth para ligar ao medidor Bosch.</string>
     <string name="bluetooth_on_denied">Ligue o Bluetooth para poder encontrar e conectar ao medidor Bosch.</string>
     <string name="none" />
