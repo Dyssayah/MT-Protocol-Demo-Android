@@ -8,7 +8,7 @@ android {
         version_name = versName
     }
 
-    compileSdkVersion 30
+    compileSdkVersion 33
     allprojects {
         tasks.withType(JavaCompile) {
             sourceCompatibility = "1.8"
@@ -19,7 +19,7 @@ android {
     defaultConfig {
         applicationId "com.bosch.glm100c.easy_connect"
         minSdkVersion 26
-        targetSdkVersion 28
+        targetSdkVersion 33
         versionCode 4
         versionName version_name
     }
@@ -34,5 +34,5 @@ android {
 
 dependencies {
     implementation files('libs/bosch-mtprotocol.jar')
-    implementation 'androidx.core:core:1.3.0'
+    implementation 'androidx.core:core:1.9.0'
 }

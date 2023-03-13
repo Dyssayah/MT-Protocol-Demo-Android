@@ -324,6 +324,7 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
      */
     private void initializeDeviceScanner() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Log.d("WWWHAAAAAT", "NOOBER ALERT");
             // Create scanner
             mBleDeviceScanner = new BleDeviceScanner21(btAdapter);
             // Create settings and filters (Lollipop or higher) for discovery

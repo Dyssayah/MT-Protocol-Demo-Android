@@ -37,6 +37,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+
 import com.bosch.glm100c.easy_connect.bluetooth.BLEService;
 import com.bosch.glm100c.easy_connect.bluetooth.MTBluetoothDevice;
 import com.bosch.glm100c.easy_connect.exc.BluetoothNotSupportedException;
@@ -101,10 +103,6 @@ public class MainActivity extends Activity implements OnItemClickListener {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-
-        if (intent.getBooleanExtra("FINISH_ACTIVITY", false)) {
-            finish();
-        }
 
         setIntent(intent);
         Uri data = intent.getData();
@@ -256,7 +254,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
     /**
      * Binds the Bluetooth service to the activity
      */
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private final ServiceConnection mConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -276,6 +274,16 @@ public class MainActivity extends Activity implements OnItemClickListener {
                 BluetoothDevice bluetoothDevice = adapter.getRemoteDevice(deviceAddress);
                 MTBluetoothDevice device = new MTBluetoothDevice(bluetoothDevice, deviceName);
 
+                if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
                 int bondState = bluetoothDevice.getBondState();
 
                 Log.d("wow", "sim 1");
