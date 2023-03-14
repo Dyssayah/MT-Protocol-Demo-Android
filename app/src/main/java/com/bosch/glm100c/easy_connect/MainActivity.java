@@ -71,8 +71,6 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
     private static final String TAG = "MainActivity";
 
-    private static final int REQUEST_CODE_ASK_PERMISSIONS_BLUETOOTH_SCAN = 42;
-
     private static final int REQUEST_CODE_ASK_PERMISSIONS_LOCATION = 41;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 66;
     private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 44;
@@ -110,13 +108,14 @@ public class MainActivity extends Activity implements OnItemClickListener {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-
-
-// Request coarse location permission
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Permission already granted, do nothing
+        } else {
+            // Request location permission
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION},
                     PERMISSION_REQUEST_COARSE_LOCATION);
         }
 
@@ -417,12 +416,12 @@ public class MainActivity extends Activity implements OnItemClickListener {
             return;
         }
 
-        // check if Bluetooth on and start it, if necessary
+       /* // check if Bluetooth on and start it, if necessary
         int hasScanningPermission = checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN);
         if (hasScanningPermission != PackageManager.PERMISSION_GRANTED) {
             requestScanningPermission();
             return;
-        }
+        }*/
         if (btService != null && btService.enableBluetooth(this)) {
             // start Bluetooth scan
             Log.w(TAG, "Device activity on resume: start discovery");
@@ -445,7 +444,6 @@ public class MainActivity extends Activity implements OnItemClickListener {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
-            case PERMISSION_REQUEST_BLUETOOTH_SCAN:
             case PERMISSION_REQUEST_COARSE_LOCATION:
             case PERMISSION_REQUEST_BACKGROUND_LOCATION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -458,7 +456,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
                     for (int i = 0; i < permissions.length; i++) {
                         if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                             String failedPermission = permissions[i];
-                            Toast.makeText(this, "Permissão " + failedPermission + " foi negada.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Permissão " + failedPermission + " foi negada.", Toast.LENGTH_LONG).show();
                         }
                     }
 
@@ -483,7 +481,8 @@ public class MainActivity extends Activity implements OnItemClickListener {
         }
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_CODE_ASK_PERMISSIONS_LOCATION);
     }
-
+/*
+    @RequiresApi(api = Build.VERSION_CODES.S)
     private void requestScanningPermission() {
         if (!shouldShowRequestPermissionRationale(Manifest.permission.BLUETOOTH_SCAN)) {
             showPermissionMessageOKCancel(getString(R.string.request_scanning_permission),
@@ -491,13 +490,13 @@ public class MainActivity extends Activity implements OnItemClickListener {
                         @RequiresApi(api = Build.VERSION_CODES.S)
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_SCAN}, REQUEST_CODE_ASK_PERMISSIONS_BLUETOOTH_SCAN);
+                            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_SCAN}, PERMISSION_REQUEST_BLUETOOTH_SCAN);
                         }
                     });
             return;
         }
-        requestPermissions(new String[]{Manifest.permission.BLUETOOTH_SCAN}, REQUEST_CODE_ASK_PERMISSIONS_BLUETOOTH_SCAN);
-    }
+        requestPermissions(new String[]{Manifest.permission.BLUETOOTH_SCAN}, PERMISSION_REQUEST_BLUETOOTH_SCAN);
+    }*/
 
     private void showPermissionMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
         new AlertDialog.Builder(this)
@@ -624,25 +623,12 @@ public class MainActivity extends Activity implements OnItemClickListener {
      * Triggers discovery of Bluetooth devices for 5 seconds
      */
     private void startDiscovery() {
-// Check if Bluetooth scanning permission is granted
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Permission is not granted
-            // Request the permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.BLUETOOTH_ADMIN},
-                    REQUEST_BLUETOOTH_PERMISSIONS);
-        } else {
-            // Permission is already granted
-            // Do Bluetooth scanning
-            if (btService != null) {
-                try {
-                    btService.startDiscovery();
-                } catch (BluetoothNotSupportedException be) {
-                    Log.e(TAG, "Bluetooth not supported");
-                    be.printStackTrace();
-                }
+        if (btService != null) {
+            try {
+                btService.startDiscovery();
+            } catch (BluetoothNotSupportedException be) {
+                Log.e(TAG, "Bluetooth not supported");
+                be.printStackTrace();
             }
         }
 
