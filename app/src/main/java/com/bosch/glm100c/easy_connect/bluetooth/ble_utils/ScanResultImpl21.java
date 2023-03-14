@@ -13,7 +13,6 @@ import com.bosch.glm100c.easy_connect.bluetooth.IScanResult;
  * Created by tos2si1 on 27.06.2017.
  */
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class ScanResultImpl21 implements IScanResult {
 
     private BluetoothDevice mDevice;

@@ -1,5 +1,7 @@
 package com.bosch.glm100c.easy_connect;
 
+import static com.bosch.glm100c.easy_connect.bluetooth.BLEService.REQUEST_ENABLE_BT;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -37,6 +39,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.bosch.glm100c.easy_connect.bluetooth.BLEService;
 import com.bosch.glm100c.easy_connect.bluetooth.MTBluetoothDevice;
 import com.bosch.glm100c.easy_connect.exc.BluetoothNotSupportedException;
@@ -65,7 +71,13 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
     private static final String TAG = "MainActivity";
 
-    public static final int REQUEST_CODE_ASK_PERMISSIONS_LOCATION = 41;
+    private static final int REQUEST_CODE_ASK_PERMISSIONS_BLUETOOTH_SCAN = 42;
+
+    private static final int REQUEST_CODE_ASK_PERMISSIONS_LOCATION = 41;
+    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 66;
+    private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 44;
+
+    private static final int PERMISSION_REQUEST_BLUETOOTH_SCAN = 91;
 
     private GLMDeviceArrayAdapter deviceArrayAdapter;
     private List<MTBluetoothDevice> devices = new ArrayList<>();
@@ -78,11 +90,52 @@ public class MainActivity extends Activity implements OnItemClickListener {
     private String urlcallback;
     private Toast tosta;
 
+    private static final int REQUEST_BLUETOOTH_PERMISSIONS = 1;
+
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
+        // Request Bluetooth enable
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            // Device doesn't support Bluetooth
+            return;
+        }
+        if (!bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+
+
+
+// Request coarse location permission
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    PERMISSION_REQUEST_COARSE_LOCATION);
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.BLUETOOTH_SCAN},
+                    PERMISSION_REQUEST_BLUETOOTH_SCAN);
+        }
+
+/*// Request background location permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                        PERMISSION_REQUEST_BACKGROUND_LOCATION);
+            }
+        }*/
 
         Intent serviceIntent = new Intent(this, BLEService.class);
         startService(serviceIntent);
@@ -98,13 +151,10 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
     }
 
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-
-        if (intent.getBooleanExtra("FINISH_ACTIVITY", false)) {
-            finish();
-        }
 
         setIntent(intent);
         Uri data = intent.getData();
@@ -243,9 +293,10 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
 
             // If not connected or selected device is not the connected device -> start connection
-            btService.connect(device);
+            if (btService.connect(device)) {
+                startForegroundService();
+            }
 
-            startForegroundService();
 
         } catch (BluetoothNotSupportedException e) {
             Log.e(TAG, "BluetoothNotSupportedException", e);
@@ -278,9 +329,10 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
                 int bondState = bluetoothDevice.getBondState();
 
-                Log.d("wow", "sim 1");
+                Log.d("wow", "" + bondState);
+                Log.d("wowie", "" + BluetoothDevice.BOND_BONDED);
                 if (bondState == BluetoothDevice.BOND_BONDED) {
-                    Log.d("wow", "sim 2");
+
                     connectToDevice(device);
                 }
             }
@@ -288,7 +340,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-			btService = null;
+            btService = null;
             mBound = false;
         }
     };
@@ -320,25 +372,26 @@ public class MainActivity extends Activity implements OnItemClickListener {
         }
     }
 
-    /*
-        @Override
-        protected void onPause() {
 
-            super.onPause();
+    @Override
+    protected void onPause() {
 
-            unregisterReceiver(mReceiver);
+        super.onPause();
 
-            // stop Bluetooth scan
-            Log.w(TAG, "Device activity on pause: cancel discovery");
-            if(btService != null) {
-                btService.cancelDiscovery();
-            }
+//            unregisterReceiver(mReceiver);
+
+        // stop Bluetooth scan
+        Log.w(TAG, "Device activity on pause: cancel discovery");
+        if (btService != null) {
+            btService.cancelDiscovery();
         }
+    }
 
 
-        /* (non-Javadoc)
-         * @see android.app.Activity#onResume()
-         */
+    /* (non-Javadoc)
+     * @see android.app.Activity#onResume()
+     */
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onResume() {
         super.onResume();
@@ -358,15 +411,18 @@ public class MainActivity extends Activity implements OnItemClickListener {
         this.registerReceiver(mReceiver, filter);
 
         // check if location permission available and request, if not
-        if (Build.VERSION.SDK_INT >= 23) {
-            int hasLocationPermission = checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-            if (hasLocationPermission != PackageManager.PERMISSION_GRANTED) {
-                requestLocationPermission();
-                return;
-            }
+        int hasLocationPermission = checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+        if (hasLocationPermission != PackageManager.PERMISSION_GRANTED) {
+            requestLocationPermission();
+            return;
         }
 
         // check if Bluetooth on and start it, if necessary
+        int hasScanningPermission = checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN);
+        if (hasScanningPermission != PackageManager.PERMISSION_GRANTED) {
+            requestScanningPermission();
+            return;
+        }
         if (btService != null && btService.enableBluetooth(this)) {
             // start Bluetooth scan
             Log.w(TAG, "Device activity on resume: start discovery");
@@ -377,7 +433,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
     @Override
     public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == BLEService.REQUEST_ENABLE_BT) {
+        if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) {
                 startDiscovery();
             } else {
@@ -389,17 +445,23 @@ public class MainActivity extends Activity implements OnItemClickListener {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
-            case REQUEST_CODE_ASK_PERMISSIONS_LOCATION:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission Granted
+            case PERMISSION_REQUEST_BLUETOOTH_SCAN:
+            case PERMISSION_REQUEST_COARSE_LOCATION:
+            case PERMISSION_REQUEST_BACKGROUND_LOCATION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (btService != null && btService.enableBluetooth(this)) {
                         // start Bluetooth scan
                         Log.w(TAG, "Device activity on permission result: start discovery");
                         startDiscovery();
                     }
                 } else {
-                    // Permission Denied
-                    Toast.makeText(this, getString(R.string.location_permission_denied), Toast.LENGTH_SHORT).show();
+                    for (int i = 0; i < permissions.length; i++) {
+                        if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                            String failedPermission = permissions[i];
+                            Toast.makeText(this, "Permissão " + failedPermission + " foi negada.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
                 }
                 break;
             default:
@@ -407,7 +469,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
         }
     }
 
-    @TargetApi(23)
+
     private void requestLocationPermission() {
         if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
             showPermissionMessageOKCancel(getString(R.string.request_location_permission),
@@ -420,6 +482,21 @@ public class MainActivity extends Activity implements OnItemClickListener {
             return;
         }
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_CODE_ASK_PERMISSIONS_LOCATION);
+    }
+
+    private void requestScanningPermission() {
+        if (!shouldShowRequestPermissionRationale(Manifest.permission.BLUETOOTH_SCAN)) {
+            showPermissionMessageOKCancel(getString(R.string.request_scanning_permission),
+                    new DialogInterface.OnClickListener() {
+                        @RequiresApi(api = Build.VERSION_CODES.S)
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_SCAN}, REQUEST_CODE_ASK_PERMISSIONS_BLUETOOTH_SCAN);
+                        }
+                    });
+            return;
+        }
+        requestPermissions(new String[]{Manifest.permission.BLUETOOTH_SCAN}, REQUEST_CODE_ASK_PERMISSIONS_BLUETOOTH_SCAN);
     }
 
     private void showPermissionMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
@@ -463,7 +540,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
                 // Device list updated
                 refreshDeviceList();
 
-                spinner = (ProgressBar)findViewById(R.id.progressBarSearch);
+                spinner = (ProgressBar) findViewById(R.id.progressBarSearch);
 
                 spinner.setVisibility(View.GONE);
             } else if (intent != null && GLMDeviceController.ACTION_SYNC_CONTAINER_RECEIVED.equals(intent.getAction())) {
@@ -523,7 +600,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
      * Used to refresh the device list shown. If Bluetooth scanning is not enabled, the list will be empty
      */
     private synchronized void refreshDeviceList() {
-        spinner = (ProgressBar)findViewById(R.id.progressBarSearch);
+        spinner = (ProgressBar) findViewById(R.id.progressBarSearch);
 
 
         devices.clear();
@@ -532,7 +609,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
             devices.addAll(btService.getVisibleDevices());
         }
 
-        Collections.sort(devices, new Comparator<MTBluetoothDevice>() {
+        devices.sort(new Comparator<MTBluetoothDevice>() {
 
             @Override
             public int compare(MTBluetoothDevice lhs, MTBluetoothDevice rhs) {
@@ -547,14 +624,28 @@ public class MainActivity extends Activity implements OnItemClickListener {
      * Triggers discovery of Bluetooth devices for 5 seconds
      */
     private void startDiscovery() {
-        if (btService != null) {
-            try {
-                btService.startDiscovery();
-            } catch (BluetoothNotSupportedException be) {
-                Log.e(TAG, "Bluetooth not supported");
-                be.printStackTrace();
+// Check if Bluetooth scanning permission is granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Permission is not granted
+            // Request the permission
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.BLUETOOTH_ADMIN},
+                    REQUEST_BLUETOOTH_PERMISSIONS);
+        } else {
+            // Permission is already granted
+            // Do Bluetooth scanning
+            if (btService != null) {
+                try {
+                    btService.startDiscovery();
+                } catch (BluetoothNotSupportedException be) {
+                    Log.e(TAG, "Bluetooth not supported");
+                    be.printStackTrace();
+                }
             }
         }
+
     }
 
     /**

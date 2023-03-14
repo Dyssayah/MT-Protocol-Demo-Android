@@ -1,5 +1,6 @@
 package com.bosch.glm100c.easy_connect.bluetooth;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -7,6 +8,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -28,6 +30,10 @@ import java.util.Set;
 
 import static com.bosch.mtprotocol.glm100C.connection.MtAsyncConnection.STATE_CONNECTING;
 
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 public class BLEService extends Service implements MtAsyncConnection.MTAsyncConnectionObserver, IBleDeviceScanner.OnDeviceDiscoveredHandler, Parcelable {
 
     private int serviceId;
@@ -36,6 +42,7 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
     public BLEService() {
         // Default constructor
     }
+
     protected BLEService(Parcel in) {
         serviceId = in.readInt();
         // Read other member variables from the parcel
@@ -175,7 +182,7 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
         if (connection != null) {
             connection.closeConnection();
             synchronized (this) {
-                if(connection!=null)
+                if (connection != null)
                     connection.removeObserver(this);
             }
             if (connection instanceof BluetoothConnection) {
@@ -196,15 +203,9 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
     /* (non-Javadoc)
      * @see android.app.Service#onStartCommand(android.content.Intent, int, int)
      */
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        if (intent != null && intent.getAction() != null) {
-            if (intent.getAction().equals("STOP_SERVICE")) {
-                stopSelf();
-            }
-        }
-
         mHandler = new Handler();
         try {
             startDiscovery();
@@ -237,8 +238,8 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
         sendBroadcast(intent);
 
 
-        if(connection.getState() == MtAsyncConnection.STATE_NONE){
-            if(this.connection != null){
+        if (connection.getState() == MtAsyncConnection.STATE_NONE) {
+            if (this.connection != null) {
                 this.connection.removeObserver(this);
                 this.connection.closeConnection();
             }
@@ -268,7 +269,7 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
      * Will check if service is connected
      * @return true if service connected, false otherwise
      */
-    public boolean isConnected(){
+    public boolean isConnected() {
         return connection != null && connection.getState() == MtAsyncConnection.STATE_CONNECTED;
     }
 
@@ -281,6 +282,7 @@ public class BLEService extends Service implements MtAsyncConnection.MTAsyncConn
         if (getConnectionState() == STATE_CONNECTING) {
             return;
         }
+
         Log.i(TAG, "BLE Device found: " + (device.getName() == null ? "NULL" : device.getName())
                 + "; address = " + (device.getAddress() == null ? "NULL" : device.getAddress())
                 + "; scan record = " + (scanRecord == null ? "NULL" : MTDeviceParserImpl.bytesToHex(scanRecord)));
